@@ -72,7 +72,6 @@ export default function InviteScreen() {
   // Deep-link entry: athleticsdept://join/TOKEN pre-verifies the invite.
   // Syncing the URL param into local state is intentional here.
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (params.token) checkToken(String(params.token), 'invite-link');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.token]);
