@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -21,7 +21,8 @@ const inviteLink = (token: string) => `https://join.athleticsdept.ae/join/${toke
 
 export default function InvitesScreen() {
   const { userId, user } = useCurrentUser();
-  const invites = useData((s) => s.invites.filter((i) => i.coachId === userId));
+  const allInvites = useData((s) => s.invites);
+  const invites = useMemo(() => allInvites.filter((i) => i.coachId === userId), [allInvites, userId]);
   const users = useData((s) => s.users);
   const createInvite = useData((s) => s.createInvite);
   const revokeInvite = useData((s) => s.revokeInvite);

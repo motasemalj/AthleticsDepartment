@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -19,10 +19,13 @@ import { formatRelativeTime } from '@/utils';
 export default function PlansTab() {
   const router = useRouter();
   const { userId } = useCurrentUser();
-  const plans = useData((s) => s.plans.filter((p) => p.coachId === userId));
+  const allPlans = useData((s) => s.plans);
   const users = useData((s) => s.users);
-  const videos = useData((s) => s.videos.filter((v) => v.coachId === userId));
+  const allVideos = useData((s) => s.videos);
   const exercises = useData((s) => s.exercises);
+
+  const plans = useMemo(() => allPlans.filter((p) => p.coachId === userId), [allPlans, userId]);
+  const videos = useMemo(() => allVideos.filter((v) => v.coachId === userId), [allVideos, userId]);
 
   const assigned = plans.filter((p) => p.athleteId);
   const templates = plans.filter((p) => !p.athleteId);

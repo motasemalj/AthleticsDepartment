@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -34,7 +34,8 @@ function PlayerSheet({ video, onClose }: { video: DemoVideo; onClose: () => void
 
 export default function VideoLibrary() {
   const { userId } = useCurrentUser();
-  const videos = useData((s) => s.videos.filter((v) => v.coachId === userId));
+  const allVideos = useData((s) => s.videos);
+  const videos = useMemo(() => allVideos.filter((v) => v.coachId === userId), [allVideos, userId]);
   const exercises = useData((s) => s.exercises);
   const addVideo = useData((s) => s.addVideo);
   const deleteVideo = useData((s) => s.deleteVideo);
