@@ -43,7 +43,7 @@ export default function NutritionTab() {
 
   if (!plan) {
     return (
-      <Screen padded={false}>
+      <Screen padded={false} tabbed>
         <ScreenHeader title="Nutrition" large />
         <EmptyState
           icon="restaurant-outline"
@@ -92,7 +92,7 @@ export default function NutritionTab() {
   };
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="Nutrition" large subtitle={plan.title} />
       <View style={{ paddingHorizontal: spacing.lg }}>
         {/* Macro summary */}

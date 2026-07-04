@@ -9,6 +9,9 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } 
 import { AppText } from '@/components/ui/Text';
 import { colors, spacing } from '@/theme/tokens';
 
+/** Visible height of the tab bar above the bottom safe-area inset. */
+export const TAB_BAR_HEIGHT = 58;
+
 export interface TabConfig {
   name: string;
   label: string;
@@ -61,7 +64,7 @@ function TabItem({
             </View>
           ) : null}
         </View>
-        <AppText variant="micro" color={focused ? colors.accent : colors.textTertiary}>
+        <AppText variant="micro" color={focused ? colors.accent : colors.textTertiary} numberOfLines={1}>
           {config.label}
         </AppText>
       </Animated.View>

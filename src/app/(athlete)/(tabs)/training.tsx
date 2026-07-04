@@ -45,7 +45,7 @@ export default function TrainingTab() {
 
   if (!plan) {
     return (
-      <Screen padded={false}>
+      <Screen padded={false} tabbed>
         <ScreenHeader title="Training" large />
         <EmptyState
           icon="barbell-outline"
@@ -60,7 +60,7 @@ export default function TrainingTab() {
   const totalThisWeek = plan.days.filter((d) => !d.isRest).length;
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader
         title="Training"
         large

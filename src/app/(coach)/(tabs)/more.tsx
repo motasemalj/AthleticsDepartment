@@ -9,27 +9,28 @@ import { Card, Divider, SectionHeader } from '@/components/ui/Card';
 import { ListRow } from '@/components/ui/ListRow';
 import { Screen, ScreenHeader } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/Text';
-import { useCurrentUser, useUnreadCounts } from '@/services/hooks';
+import { useCurrentUser } from '@/services/hooks';
 import { useSession } from '@/services/session';
-import { colors, spacing } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 
 export default function CoachMore() {
   const router = useRouter();
-  const { userId, user, coachProfile } = useCurrentUser();
-  const { unreadMessages } = useUnreadCounts(userId);
+  const { user, coachProfile } = useCurrentUser();
   const signOut = useSession((s) => s.signOut);
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="More" large />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Animated.View entering={FadeInDown.duration(300)}>
-          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <Card
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+            onPress={() => router.push('/profile')}>
             <Avatar name={user?.name ?? ''} uri={user?.avatarUrl} size={54} showRing />
             <View style={{ flex: 1 }}>
               <AppText variant="headline">{user?.name}</AppText>
               <AppText variant="captionRegular" tone="secondary" numberOfLines={1}>
-                {coachProfile?.specialties.join(' · ')}
+                View & edit profile
               </AppText>
             </View>
             {coachProfile?.isOwner ? <Badge label="Owner" tone="violet" icon="star" /> : <Badge label="Coach" tone="accent" />}
@@ -38,15 +39,6 @@ export default function CoachMore() {
 
         <SectionHeader title="Business" style={{ marginTop: 0, marginBottom: 0 }} />
         <Card>
-          <ListRow
-            icon="chatbubble-ellipses-outline"
-            iconColor={colors.accent}
-            iconBg={colors.accentMuted}
-            title="Messages"
-            right={unreadMessages > 0 ? <Badge label={`${unreadMessages}`} tone="accent" /> : undefined}
-            onPress={() => router.push('/(coach)/chats')}
-          />
-          <Divider style={{ marginVertical: 0 }} />
           <ListRow icon="wallet-outline" title="Earnings" subtitle="Gross, commission, net & payouts" onPress={() => router.push('/(coach)/earnings')} />
           <Divider style={{ marginVertical: 0 }} />
           <ListRow icon="pricetags-outline" title="Pricing" subtitle="3/6/12-month plans & student discount" onPress={() => router.push('/(coach)/pricing')} />

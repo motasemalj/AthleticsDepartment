@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -36,8 +38,19 @@ export default function InviteScreen() {
   const [email, setEmail] = useState('');
   const [goal, setGoal] = useState('');
   const [isStudent, setIsStudent] = useState(false);
+  const [avatarUri, setAvatarUri] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
+
+  const pickAvatar = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) setAvatarUri(result.assets[0].uri);
+  };
 
   const checkToken = (value: string, via: 'invite-link' | 'qr') => {
     const invite = invites.find(
@@ -91,6 +104,7 @@ export default function InviteScreen() {
         goal: goal.trim(),
         isStudent,
         joinedVia,
+        avatarUrl: avatarUri,
       });
       setLoading(false);
       if ('error' in result) {
@@ -183,6 +197,18 @@ export default function InviteScreen() {
                 </AppText>
               </View>
             </Card>
+            <Pressable onPress={pickAvatar} accessibilityRole="button" accessibilityLabel="Add profile photo" style={styles.avatarPick}>
+              {avatarUri ? (
+                <Avatar name={name || '?'} uri={avatarUri} size={84} showRing />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons name="camera-outline" size={22} color={colors.accent} />
+                </View>
+              )}
+              <AppText variant="caption" tone={avatarUri ? 'success' : 'secondary'} style={{ marginTop: spacing.xs }}>
+                {avatarUri ? 'Photo added — tap to change' : 'Add a profile photo (optional)'}
+              </AppText>
+            </Pressable>
             <Input label="Full name" icon="person-outline" placeholder="Your name" value={name} onChangeText={setName} autoComplete="name" />
             <Input
               label="Email"
@@ -243,4 +269,16 @@ const styles = StyleSheet.create({
   scanError: { position: 'absolute', bottom: 20 },
   coachConfirm: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   studentRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  avatarPick: { alignItems: 'center', paddingVertical: spacing.xs },
+  avatarPlaceholder: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.accentBorder,
+    backgroundColor: colors.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

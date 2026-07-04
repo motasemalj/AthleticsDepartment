@@ -9,31 +9,28 @@ import { Card, Divider, SectionHeader } from '@/components/ui/Card';
 import { ListRow } from '@/components/ui/ListRow';
 import { Screen, ScreenHeader } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/Text';
-import { useData } from '@/services/data/store';
-import { useCurrentUser, useUnreadCounts } from '@/services/hooks';
+import { useCurrentUser } from '@/services/hooks';
 import { useSession } from '@/services/session';
-import { colors, spacing } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 
 export default function MoreTab() {
   const router = useRouter();
-  const { userId, user, athleteProfile, coach } = useCurrentUser();
-  const { unreadMessages } = useUnreadCounts(userId);
-  const conversations = useData((s) => s.conversations);
+  const { user, athleteProfile } = useCurrentUser();
   const signOut = useSession((s) => s.signOut);
 
-  const conversation = conversations.find((c) => c.athleteId === userId);
-
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="More" large />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Animated.View entering={FadeInDown.duration(300)}>
-          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <Card
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+            onPress={() => router.push('/profile')}>
             <Avatar name={user?.name ?? ''} uri={user?.avatarUrl} size={54} />
             <View style={{ flex: 1 }}>
               <AppText variant="headline">{user?.name}</AppText>
               <AppText variant="captionRegular" tone="secondary" numberOfLines={1}>
-                {athleteProfile?.goal}
+                View & edit profile
               </AppText>
             </View>
             {athleteProfile?.isStudent ? <Badge label="Student" tone="info" /> : null}
@@ -41,16 +38,6 @@ export default function MoreTab() {
         </Animated.View>
 
         <Card>
-          <ListRow
-            icon="chatbubble-ellipses-outline"
-            iconColor={colors.accent}
-            iconBg={colors.accentMuted}
-            title="Messages"
-            subtitle={coach ? `Chat with ${coach.name}` : undefined}
-            right={unreadMessages > 0 ? <Badge label={`${unreadMessages}`} tone="accent" /> : undefined}
-            onPress={() => conversation && router.push(`/chat/${conversation.id}`)}
-          />
-          <Divider style={{ marginVertical: 0 }} />
           <ListRow
             icon="videocam-outline"
             title="Video check-ins"

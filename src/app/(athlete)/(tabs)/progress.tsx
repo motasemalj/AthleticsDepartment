@@ -52,7 +52,7 @@ export default function ProgressTab() {
 
   if (entries.length === 0 && photos.length === 0) {
     return (
-      <Screen padded={false}>
+      <Screen padded={false} tabbed>
         <ScreenHeader title="Progress" large />
         <EmptyState
           icon="trending-up-outline"
@@ -66,7 +66,7 @@ export default function ProgressTab() {
   }
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader
         title="Progress"
         large

@@ -38,7 +38,7 @@ export default function AdminCoaches() {
   );
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="Coaches" large subtitle="Review applications, set commission" />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Segmented<Filter>

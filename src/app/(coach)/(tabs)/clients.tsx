@@ -49,7 +49,7 @@ export default function ClientsRoster() {
   }, [athleteProfiles, users, workoutLogs, checkins, subscriptions, userId, query]);
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader
         title="Clients"
         large

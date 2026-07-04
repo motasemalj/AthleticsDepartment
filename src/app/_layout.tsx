@@ -50,6 +50,7 @@ export default function RootLayout() {
             <Stack.Screen name="(admin)" options={{ animation: 'fade' }} />
             <Stack.Screen name="chat/[id]" />
             <Stack.Screen name="notifications" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           </Stack>
           <ToastHost />
         </View>

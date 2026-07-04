@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 
@@ -22,17 +22,19 @@ export function Sheet({
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <Animated.View entering={FadeIn.duration(180)} style={styles.scrim}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
-        <Animated.View
-          entering={SlideInDown.duration(280).springify().damping(20)}
-          style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
-          <View style={styles.handle} />
-          {title ? (
-            <AppText variant="title" style={{ marginBottom: spacing.md }}>
-              {title}
-            </AppText>
-          ) : null}
-          {children}
-        </Animated.View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} pointerEvents="box-none">
+          <Animated.View
+            entering={SlideInDown.duration(280).springify().damping(20)}
+            style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
+            <View style={styles.handle} />
+            {title ? (
+              <AppText variant="title" style={{ marginBottom: spacing.md }}>
+                {title}
+              </AppText>
+            ) : null}
+            {children}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </Animated.View>
     </Modal>
   );

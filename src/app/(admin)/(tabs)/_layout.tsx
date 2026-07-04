@@ -18,7 +18,12 @@ export default function AdminTabs() {
   return (
     <Tabs
       screenOptions={{ headerShown: false, lazy: false }}
-      tabBar={(props) => <TabBar {...props} tabs={tabs} />}
-    />
+      tabBar={(props) => <TabBar {...props} tabs={tabs} />}>
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="coaches" />
+      <Tabs.Screen name="subscriptions" />
+      <Tabs.Screen name="revenue" />
+      <Tabs.Screen name="more" />
+    </Tabs>
   );
 }

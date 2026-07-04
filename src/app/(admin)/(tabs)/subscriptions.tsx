@@ -43,7 +43,7 @@ export default function AdminSubscriptions() {
     s === 'active' ? 'success' : s === 'paused' ? 'warning' : s === 'past_due' ? 'danger' : 'neutral';
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="Subscriptions" large subtitle="Pause, cancel and refund" />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Segmented<Filter>

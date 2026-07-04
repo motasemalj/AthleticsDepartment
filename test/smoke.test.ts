@@ -343,6 +343,33 @@ describe('coach features', () => {
     expect('error' in revoked).toBe(true);
   });
 
+  it('custom exercises: created in library, video attach links both ways', () => {
+    const created = s().addExercise({ name: 'Landmine Press', muscleGroup: 'shoulders', equipment: 'Barbell' });
+    expect(s().exercises.some((e) => e.id === created.id)).toBe(true);
+    expect(created.videoId).toBeUndefined();
+
+    s().attachVideoToExercise(created.id, { coachId, title: 'Landmine Press — demo', url: 'file://demo.mp4' });
+    const updated = s().exercises.find((e) => e.id === created.id)!;
+    expect(updated.videoId).toBeTruthy();
+    const video = s().videos.find((v) => v.id === updated.videoId)!;
+    expect(video.assignedExerciseIds).toContain(created.id);
+    expect(video.category).toBe('shoulders');
+  });
+
+  it('invite redemption stores the chosen profile photo', () => {
+    const invite = s().createInvite(coachId);
+    const result = s().redeemInvite(invite.token, {
+      name: 'Photo Athlete',
+      email: 'photo@test.com',
+      goal: 'x',
+      isStudent: false,
+      joinedVia: 'invite-link',
+      avatarUrl: 'file://avatar.jpg',
+    });
+    const user = 'user' in result ? result.user : null;
+    expect(user?.avatarUrl).toBe('file://avatar.jpg');
+  });
+
   it('earnings: coach net = sum of payment nets', () => {
     const paid = s().payments.filter((p) => p.coachId === coachId && p.status === 'paid');
     const net = paid.reduce((a, p) => a + p.netAed, 0);

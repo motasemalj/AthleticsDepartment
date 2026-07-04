@@ -54,7 +54,7 @@ export default function CheckinQueue() {
   };
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="Check-in queue" large subtitle={filter === 'pending' ? 'Oldest first — keep the queue moving' : undefined} />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Segmented<Filter>

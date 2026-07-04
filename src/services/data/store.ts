@@ -130,14 +130,19 @@ export interface DataState {
   // -- invites & onboarding
   createInvite: (coachId: ID) => Invite;
   revokeInvite: (id: ID) => void;
-  redeemInvite: (token: string, details: { name: string; email: string; goal: string; isStudent: boolean; joinedVia: 'invite-link' | 'qr' }) => { user: User } | { error: string };
-  submitCoachApplication: (details: { name: string; email: string; bio: string; specialties: string[]; yearsExperience: number; certifications: { name: string; fileName: string }[] }) => User;
+  redeemInvite: (token: string, details: { name: string; email: string; goal: string; isStudent: boolean; joinedVia: 'invite-link' | 'qr'; avatarUrl?: string }) => { user: User } | { error: string };
+  submitCoachApplication: (details: { name: string; email: string; bio: string; specialties: string[]; yearsExperience: number; certifications: { name: string; fileName: string }[]; avatarUrl?: string }) => User;
   acceptDisclaimer: (userId: ID) => void;
+
+  // -- exercise library
+  addExercise: (exercise: Omit<Exercise, 'id'>) => Exercise;
+  attachVideoToExercise: (exerciseId: ID, video: { coachId: ID; title: string; url: string }) => void;
 
   // -- coach settings
   updateCoachPricing: (coachId: ID, pricing: PricingTier[], studentDiscountPct: number) => void;
   updateCoachProfile: (coachId: ID, patch: Partial<CoachProfile>) => void;
   updateUser: (userId: ID, patch: Partial<User>) => void;
+  updateAthleteProfile: (userId: ID, patch: Partial<AthleteProfile>) => void;
 
   // -- admin
   approveCoach: (coachId: ID, commissionPct: number) => void;
@@ -448,6 +453,7 @@ export const useData = create<DataState>()(
           role: 'athlete',
           name: details.name,
           email: details.email,
+          avatarUrl: details.avatarUrl,
           createdAt: Date.now(),
         };
         const profile: AthleteProfile = {
@@ -490,6 +496,7 @@ export const useData = create<DataState>()(
           role: 'coach',
           name: details.name,
           email: details.email,
+          avatarUrl: details.avatarUrl,
           createdAt: Date.now(),
         };
         const profile: CoachProfile = {
@@ -526,6 +533,32 @@ export const useData = create<DataState>()(
         return user;
       },
 
+      // ------------------------------------------------------------ exercise library
+      addExercise: (exercise) => {
+        const created: Exercise = { ...exercise, id: uid('ex') };
+        set((s) => ({ exercises: [created, ...s.exercises] }));
+        return created;
+      },
+
+      attachVideoToExercise: (exerciseId, video) => {
+        const exercise = get().exercises.find((e) => e.id === exerciseId);
+        const created: DemoVideo = {
+          id: uid('vid'),
+          coachId: video.coachId,
+          title: video.title,
+          category: exercise?.muscleGroup ?? 'full-body',
+          url: video.url,
+          thumbnailColor: '#8B5CF6',
+          durationSec: 0,
+          uploadedAt: Date.now(),
+          assignedExerciseIds: [exerciseId],
+        };
+        set((s) => ({
+          videos: [created, ...s.videos],
+          exercises: s.exercises.map((e) => (e.id === exerciseId ? { ...e, videoId: created.id } : e)),
+        }));
+      },
+
       acceptDisclaimer: (userId) =>
         set((s) => ({
           athleteProfiles: s.athleteProfiles.map((p) =>
@@ -548,6 +581,11 @@ export const useData = create<DataState>()(
 
       updateUser: (userId, patch) =>
         set((s) => ({ users: s.users.map((u) => (u.id === userId ? { ...u, ...patch } : u)) })),
+
+      updateAthleteProfile: (userId, patch) =>
+        set((s) => ({
+          athleteProfiles: s.athleteProfiles.map((p) => (p.userId === userId ? { ...p, ...patch } : p)),
+        })),
 
       // ------------------------------------------------------------ admin
       approveCoach: (coachId, commissionPct) => {

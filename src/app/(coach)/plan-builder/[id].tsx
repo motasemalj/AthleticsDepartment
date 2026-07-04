@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { SortableList } from '@/components/SortableList';
@@ -53,6 +54,8 @@ export default function PlanBuilder() {
   const users = useData((s) => s.users);
   const savePlan = useData((s) => s.savePlan);
   const deletePlan = useData((s) => s.deletePlan);
+  const addExerciseToLibrary = useData((s) => s.addExercise);
+  const attachVideoToExercise = useData((s) => s.attachVideoToExercise);
 
   const existing = plans.find((p) => p.id === id);
   const [plan, setPlan] = useState<TrainingPlan>(() => existing ?? emptyPlan(userId!));
@@ -62,6 +65,11 @@ export default function PlanBuilder() {
   const [assignOpen, setAssignOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [muscle, setMuscle] = useState<MuscleGroup | 'all'>('all');
+  const [creatingCustom, setCreatingCustom] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customMuscle, setCustomMuscle] = useState<MuscleGroup>('full-body');
+  const [customEquipment, setCustomEquipment] = useState('');
+  const [customVideoUri, setCustomVideoUri] = useState<string | null>(null);
 
   const day = plan.days.find((d) => d.dayIndex === dayIndex)!;
   const myClients = athleteProfiles.filter((p) => p.coachId === userId);
@@ -88,6 +96,47 @@ export default function PlanBuilder() {
     updateDay({ exercises: [...day.exercises, pe], isRest: false });
     setPickerOpen(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const pickCustomVideo = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'] });
+    if (!result.canceled && result.assets[0]) setCustomVideoUri(result.assets[0].uri);
+  };
+
+  const createCustomExercise = () => {
+    if (!customName.trim()) {
+      toast.error('Name the exercise');
+      return;
+    }
+    const created = addExerciseToLibrary({
+      name: customName.trim(),
+      muscleGroup: customMuscle,
+      equipment: customEquipment.trim() || 'Bodyweight',
+    });
+    if (customVideoUri) {
+      attachVideoToExercise(created.id, {
+        coachId: userId!,
+        title: `${created.name} — demo`,
+        url: customVideoUri,
+      });
+    }
+    addExercise(created.id);
+    setCreatingCustom(false);
+    setCustomName('');
+    setCustomEquipment('');
+    setCustomVideoUri(null);
+    toast.success(`${created.name} added to your library`);
+  };
+
+  const attachVideoTo = async (exerciseId: string, exerciseName: string) => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'] });
+    if (result.canceled || !result.assets[0]) return;
+    attachVideoToExercise(exerciseId, {
+      coachId: userId!,
+      title: `${exerciseName} — demo`,
+      url: result.assets[0].uri,
+    });
+    toast.success('Demo video attached');
   };
 
   const updateExercise = (peId: string, patch: Partial<PlanExercise>) =>
@@ -283,32 +332,82 @@ export default function PlanBuilder() {
       </View>
 
       {/* Exercise picker */}
-      <Sheet visible={pickerOpen} onClose={() => setPickerOpen(false)} title="Exercise library">
-        <Input icon="search-outline" placeholder="Search exercises" value={search} onChangeText={setSearch} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, paddingVertical: spacing.sm }}>
-          {MUSCLE_GROUPS.map((m) => (
-            <Chip key={m} label={m === 'all' ? 'All' : m} selected={muscle === m} onPress={() => setMuscle(m)} />
-          ))}
-        </ScrollView>
-        <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
-          {filteredExercises.map((e) => (
-            <Pressable key={e.id} onPress={() => addExercise(e.id)} style={styles.pickerRow} accessibilityRole="button">
-              <View style={{ flex: 1 }}>
-                <AppText variant="bodySemi">{e.name}</AppText>
-                <AppText variant="micro" tone="tertiary">
-                  {e.muscleGroup} · {e.equipment}
-                  {e.videoId ? ' · 🎬 demo attached' : ''}
+      <Sheet
+        visible={pickerOpen}
+        onClose={() => {
+          setPickerOpen(false);
+          setCreatingCustom(false);
+        }}
+        title={creatingCustom ? 'Custom exercise' : 'Exercise library'}>
+        {creatingCustom ? (
+          <View style={{ gap: spacing.sm }}>
+            <Input label="Exercise name" placeholder="e.g. Landmine Press" value={customName} onChangeText={setCustomName} autoFocus />
+            <AppText variant="caption" tone="secondary">
+              Muscle group
+            </AppText>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
+              {MUSCLE_GROUPS.filter((m) => m !== 'all').map((m) => (
+                <Chip key={m} label={m} selected={customMuscle === m} onPress={() => setCustomMuscle(m as MuscleGroup)} />
+              ))}
+            </ScrollView>
+            <Input label="Equipment" placeholder="e.g. Barbell, Dumbbells, Bodyweight" value={customEquipment} onChangeText={setCustomEquipment} />
+            <Pressable onPress={pickCustomVideo} accessibilityRole="button">
+              <View style={[styles.videoDrop, customVideoUri ? { borderColor: colors.accentBorder } : null]}>
+                <Ionicons
+                  name={customVideoUri ? 'checkmark-circle' : 'videocam-outline'}
+                  size={18}
+                  color={customVideoUri ? colors.success : colors.accent}
+                />
+                <AppText variant="caption" tone={customVideoUri ? 'success' : 'secondary'}>
+                  {customVideoUri ? 'Demo video attached' : 'Upload demo video (optional)'}
                 </AppText>
               </View>
-              <Ionicons name="add-circle" size={22} color={colors.accent} />
             </Pressable>
-          ))}
-          {filteredExercises.length === 0 ? (
-            <AppText variant="captionRegular" tone="tertiary" align="center" style={{ paddingVertical: spacing.lg }}>
-              No exercises match
-            </AppText>
-          ) : null}
-        </ScrollView>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Button label="Back" variant="secondary" onPress={() => setCreatingCustom(false)} />
+              <Button label="Create & add to day" style={{ flex: 1 }} onPress={createCustomExercise} />
+            </View>
+          </View>
+        ) : (
+          <>
+            <Input icon="search-outline" placeholder="Search exercises" value={search} onChangeText={setSearch} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, paddingVertical: spacing.sm }}>
+              {MUSCLE_GROUPS.map((m) => (
+                <Chip key={m} label={m === 'all' ? 'All' : m} selected={muscle === m} onPress={() => setMuscle(m)} />
+              ))}
+            </ScrollView>
+            <Pressable onPress={() => setCreatingCustom(true)} style={styles.customRow} accessibilityRole="button">
+              <View style={styles.customIcon}>
+                <Ionicons name="add" size={18} color={colors.textOnAccent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="bodySemi">Create custom exercise</AppText>
+                <AppText variant="micro" tone="tertiary">
+                  Name it, pick a muscle group, optionally upload a demo video
+                </AppText>
+              </View>
+            </Pressable>
+            <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+              {filteredExercises.map((e) => (
+                <Pressable key={e.id} onPress={() => addExercise(e.id)} style={styles.pickerRow} accessibilityRole="button">
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="bodySemi">{e.name}</AppText>
+                    <AppText variant="micro" tone="tertiary">
+                      {e.muscleGroup} · {e.equipment}
+                      {e.videoId ? ' · 🎬 demo attached' : ''}
+                    </AppText>
+                  </View>
+                  <Ionicons name="add-circle" size={22} color={colors.accent} />
+                </Pressable>
+              ))}
+              {filteredExercises.length === 0 ? (
+                <AppText variant="captionRegular" tone="tertiary" align="center" style={{ paddingVertical: spacing.lg }}>
+                  No exercises match
+                </AppText>
+              ) : null}
+            </ScrollView>
+          </>
+        )}
       </Sheet>
 
       {/* Exercise editor */}
@@ -317,6 +416,11 @@ export default function PlanBuilder() {
           <EditExercise
             key={editingEx.id}
             initial={day.exercises.find((e) => e.id === editingEx.id) ?? editingEx}
+            hasVideo={!!exercises.find((e) => e.id === editingEx.exerciseId)?.videoId}
+            onAttachVideo={() => {
+              const ex = exercises.find((e) => e.id === editingEx.exerciseId);
+              if (ex) attachVideoTo(ex.id, ex.name);
+            }}
             onSave={(patch) => {
               updateExercise(editingEx.id, patch);
               setEditingEx(null);
@@ -370,9 +474,13 @@ export default function PlanBuilder() {
 
 function EditExercise({
   initial,
+  hasVideo,
+  onAttachVideo,
   onSave,
 }: {
   initial: PlanExercise;
+  hasVideo: boolean;
+  onAttachVideo: () => void;
   onSave: (patch: Partial<PlanExercise>) => void;
 }) {
   const [sets, setSets] = useState(initial.sets);
@@ -405,6 +513,18 @@ function EditExercise({
         <Input label="Tempo" placeholder="31X1" value={tempo} onChangeText={setTempo} containerStyle={{ flex: 1 }} />
       </View>
       <Input label="Coach note" placeholder="Cue or instruction for the athlete" value={notes} onChangeText={setNotes} />
+      <Pressable onPress={onAttachVideo} accessibilityRole="button">
+        <View style={[styles.videoDrop, hasVideo ? { borderColor: colors.accentBorder } : null]}>
+          <Ionicons
+            name={hasVideo ? 'checkmark-circle' : 'videocam-outline'}
+            size={18}
+            color={hasVideo ? colors.success : colors.accent}
+          />
+          <AppText variant="caption" tone={hasVideo ? 'success' : 'secondary'}>
+            {hasVideo ? 'Demo video attached — tap to replace' : 'Upload demo video for this exercise'}
+          </AppText>
+        </View>
+      </Pressable>
       <Button
         label="Save exercise"
         size="lg"
@@ -467,5 +587,32 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+  },
+  customRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  customIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.full,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoDrop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.borderStrong,
   },
 });

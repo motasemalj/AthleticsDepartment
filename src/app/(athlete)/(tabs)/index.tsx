@@ -89,10 +89,14 @@ export default function AthleteHome() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+        <Pressable
+          onPress={() => router.push('/profile')}
+          accessibilityRole="button"
+          accessibilityLabel="Open profile"
+          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
           <Avatar name={user?.name ?? ''} uri={user?.avatarUrl} size={44} />
           <View>
             <AppText variant="captionRegular" tone="secondary">
@@ -100,7 +104,7 @@ export default function AthleteHome() {
             </AppText>
             <AppText variant="title">{firstName}</AppText>
           </View>
-        </View>
+        </Pressable>
         <View style={{ flexDirection: 'row', gap: spacing.xs }}>
           <HeaderBell
             icon="chatbubble-ellipses-outline"

@@ -22,16 +22,18 @@ export default function AdminMore() {
   const resetDemoData = useData((s) => s.resetDemoData);
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="More" large />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Animated.View entering={FadeInDown.duration(300)}>
-          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <Card
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
+            onPress={() => router.push('/profile')}>
             <Avatar name={user?.name ?? ''} uri={user?.avatarUrl} size={54} />
             <View style={{ flex: 1 }}>
               <AppText variant="headline">{user?.name}</AppText>
               <AppText variant="captionRegular" tone="secondary">
-                {user?.email}
+                View & edit profile
               </AppText>
             </View>
             <Badge label="Owner" tone="violet" icon="star" />

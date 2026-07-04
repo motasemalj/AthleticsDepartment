@@ -31,7 +31,7 @@ export default function PlansTab() {
   const templates = plans.filter((p) => !p.athleteId);
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader
         title="Plans"
         large

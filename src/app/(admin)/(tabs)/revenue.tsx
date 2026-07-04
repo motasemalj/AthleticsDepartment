@@ -67,7 +67,7 @@ export default function RevenueDashboard() {
   }, [paid, users, coachProfiles]);
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="Revenue split" large subtitle="Owner coaching vs platform commission" />
       <View style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
         <Segmented<Range>

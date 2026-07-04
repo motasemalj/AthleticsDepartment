@@ -73,7 +73,7 @@ export default function ScheduleTab() {
   };
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} tabbed>
       <ScreenHeader title="Schedule" large subtitle="Sessions run over Google Meet" />
       <View style={{ paddingHorizontal: spacing.lg }}>
         {/* Requests */}

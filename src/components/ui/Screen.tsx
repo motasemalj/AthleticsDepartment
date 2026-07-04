@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TAB_BAR_HEIGHT } from '@/components/TabBar';
 import { AppText } from '@/components/ui/Text';
 import { colors, spacing } from '@/theme/tokens';
 
@@ -70,6 +71,7 @@ export function Screen({
   onRefresh,
   keyboardAware,
   bottomInset = true,
+  tabbed = false,
   ...scrollProps
 }: {
   children: React.ReactNode;
@@ -81,8 +83,12 @@ export function Screen({
   onRefresh?: () => void;
   keyboardAware?: boolean;
   bottomInset?: boolean;
+  /** Set on tab screens so content scrolls clear of the floating tab bar. */
+  tabbed?: boolean;
 } & ScrollViewProps) {
   const insets = useSafeAreaInsets();
+  const bottomPadding =
+    (bottomInset ? insets.bottom : 0) + (tabbed ? TAB_BAR_HEIGHT + spacing.lg : 0) + spacing.xxl;
 
   const body = scroll ? (
     <ScrollView
@@ -90,7 +96,7 @@ export function Screen({
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={[
         padded && { paddingHorizontal: spacing.lg },
-        { paddingBottom: (bottomInset ? insets.bottom : 0) + spacing.xxl },
+        { paddingBottom: bottomPadding },
         contentStyle,
       ]}
       refreshControl={

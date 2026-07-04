@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
+import { Avatar } from '@/components/ui/Avatar';
 import { Badge, Chip } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -30,6 +31,7 @@ export default function CoachApply() {
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
   const [years, setYears] = useState('');
+  const [avatarUri, setAvatarUri] = useState<string | undefined>();
   const [selected, setSelected] = useState<string[]>([]);
   const [certs, setCerts] = useState<{ name: string; fileName: string }[]>([]);
   const [certName, setCertName] = useState('');
@@ -38,6 +40,16 @@ export default function CoachApply() {
 
   const toggleSpecialty = (s: string) =>
     setSelected((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : prev.length < 3 ? [...prev, s] : prev));
+
+  const pickAvatar = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) setAvatarUri(result.assets[0].uri);
+  };
 
   const attachCert = async () => {
     if (!certName.trim()) {
@@ -72,6 +84,7 @@ export default function CoachApply() {
         specialties: selected,
         yearsExperience: Number(years) || 0,
         certifications: certs,
+        avatarUrl: avatarUri,
       });
       setLoading(false);
       signIn(user.id, 'coach');
@@ -83,6 +96,18 @@ export default function CoachApply() {
     <Screen keyboardAware padded={false}>
       <ScreenHeader title="Coach application" back subtitle="Reviewed by our team within 48 hours" />
       <Animated.View entering={FadeInDown.duration(320)} style={{ paddingHorizontal: spacing.lg, gap: spacing.md }}>
+        <Pressable onPress={pickAvatar} accessibilityRole="button" accessibilityLabel="Add profile photo" style={styles.avatarPick}>
+          {avatarUri ? (
+            <Avatar name={name || '?'} uri={avatarUri} size={84} showRing />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="camera-outline" size={22} color={colors.accent} />
+            </View>
+          )}
+          <AppText variant="caption" tone={avatarUri ? 'success' : 'secondary'} style={{ marginTop: spacing.xs }}>
+            {avatarUri ? 'Photo added — tap to change' : 'Add your coach photo'}
+          </AppText>
+        </Pressable>
         <Input label="Full name" icon="person-outline" placeholder="Your name" value={name} onChangeText={setName} />
         <Input
           label="Email"
@@ -166,4 +191,16 @@ export default function CoachApply() {
 const styles = StyleSheet.create({
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   certRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  avatarPick: { alignItems: 'center', paddingVertical: spacing.xs },
+  avatarPlaceholder: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.accentBorder,
+    backgroundColor: colors.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

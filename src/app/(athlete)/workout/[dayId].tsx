@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Badge } from '@/components/ui/Badge';
@@ -46,6 +47,7 @@ const FEELINGS = [
 
 export default function WorkoutPlayer() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { dayId } = useLocalSearchParams<{ dayId: string }>();
   const { userId } = useCurrentUser();
   const { isOnline } = useOfflineSync();
@@ -193,7 +195,10 @@ export default function WorkoutPlayer() {
 
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: 140 }}>
+        contentContainerStyle={{
+          paddingHorizontal: spacing.lg,
+          paddingBottom: insets.bottom + 170, // clears the pinned finish bar + rest chip
+        }}>
         {day.exercises.map((pe, exIdx) => {
           const exercise = exercises.find((e) => e.id === pe.exerciseId);
           const video = exercise?.videoId ? videos.find((v) => v.id === exercise.videoId) : undefined;
@@ -282,7 +287,7 @@ export default function WorkoutPlayer() {
       </Animated.ScrollView>
 
       {/* Bottom bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.xs }]}>
         {restLeft !== null ? (
           <Animated.View entering={FadeIn.duration(200)} style={styles.restChip}>
             <Ionicons name="timer-outline" size={16} color={colors.accent} />
@@ -415,8 +420,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
     backgroundColor: colors.surfaceOverlay,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
