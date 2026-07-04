@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
 import { AppText } from '@/components/ui/Text';
 import { colors, spacing } from '@/theme/tokens';
@@ -36,9 +36,13 @@ function TabItem({
       accessibilityState={{ selected: focused }}
       onPress={() => {
         Haptics.selectionAsync();
-        scale.value = withSpring(0.85, { damping: 15 }, () => {
-          scale.value = withSpring(1, { damping: 12 });
-        });
+        // withSequence instead of a completion callback: on web the callback
+        // fires synchronously, and re-assigning the shared value inside it
+        // recurses until the call stack overflows.
+        scale.value = withSequence(
+          withSpring(0.85, { damping: 15 }),
+          withSpring(1, { damping: 12 })
+        );
         onPress();
       }}
       style={styles.tab}>
