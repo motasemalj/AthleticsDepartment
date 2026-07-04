@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Progress & check-in photos: private to the athlete (coach reads via signed URLs
+    // generated server-side, keeping the bucket locked down).
+    match /athletes/{athleteId}/{allPaths=**} {
+      allow read, write: if signedIn() && request.auth.uid == athleteId
+        && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    // Coach content: demo videos, certification documents.
+    match /coaches/{coachId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == coachId
+        && request.resource.size < 200 * 1024 * 1024;
+    }
+
+    // Chat attachments, scoped per conversation.
+    match /chat/{conversationId}/{allPaths=**} {
+      allow read, write: if signedIn()
+        && firestore.exists(/databases/(default)/documents/conversations/$(conversationId))
+        && (firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.athleteId == request.auth.uid
+         || firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.coachId == request.auth.uid);
+    }
+  }
+}

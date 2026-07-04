@@ -1,0 +1,194 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && role() == 'admin';
+    }
+
+    function isCoachOf(athleteId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/athletes/$(athleteId)).data.coachId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------- users
+    match /users/{userId} {
+      allow read: if isSelf(userId) || isAdmin() || isCoachOf(userId);
+      allow create: if isSelf(userId);
+      allow update: if isSelf(userId) || isAdmin();
+      allow delete: if isSelf(userId) || isAdmin();
+    }
+
+    match /users/{userId}/pushTokens/{token} {
+      allow read, write: if isSelf(userId);
+    }
+
+    // -------------------------------------------------------------- profiles
+    match /athletes/{athleteId} {
+      allow read: if isSelf(athleteId) || isAdmin() ||
+        (signedIn() && resource.data.coachId == request.auth.uid);
+      allow create: if isSelf(athleteId);
+      allow update: if isSelf(athleteId) || isAdmin() ||
+        (signedIn() && resource.data.coachId == request.auth.uid);
+      allow delete: if isSelf(athleteId) || isAdmin();
+    }
+
+    match /coaches/{coachId} {
+      allow read: if signedIn(); // public directory of coaches for athletes
+      allow create: if isSelf(coachId);
+      // Coaches edit their own profile but can never self-approve or set commission.
+      allow update: if isAdmin() ||
+        (isSelf(coachId) &&
+          request.resource.data.status == resource.data.status &&
+          request.resource.data.commissionPct == resource.data.commissionPct &&
+          request.resource.data.isOwner == resource.data.isOwner);
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------- invites
+    match /invites/{inviteId} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin() ||
+        (signedIn() && request.resource.data.coachId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------- training
+    match /trainingPlans/{planId} {
+      allow read: if signedIn() &&
+        (resource.data.coachId == request.auth.uid || resource.data.athleteId == request.auth.uid || isAdmin());
+      allow create, update, delete: if signedIn() && request.resource.data.coachId == request.auth.uid;
+    }
+
+    match /workoutLogs/{logId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || isCoachOf(resource.data.athleteId) || isAdmin());
+      allow create, update: if signedIn() && request.resource.data.athleteId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.athleteId == request.auth.uid;
+    }
+
+    match /exerciseLibrary/{exerciseId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /videos/{videoId} {
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn() && request.resource.data.coachId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------- check-ins & health
+    match /checkins/{checkinId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.athleteId == request.auth.uid;
+      // Only the assigned coach can review/comment.
+      allow update: if signedIn() && resource.data.coachId == request.auth.uid;
+    }
+
+    match /nutritionPlans/{planId} {
+      allow read: if signedIn() &&
+        (resource.data.coachId == request.auth.uid || resource.data.athleteId == request.auth.uid || isAdmin());
+      allow create, update, delete: if signedIn() && request.resource.data.coachId == request.auth.uid;
+    }
+
+    match /mealLogs/{logId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || isCoachOf(resource.data.athleteId) || isAdmin());
+      allow create, delete: if signedIn() && request.resource.data.athleteId == request.auth.uid;
+    }
+
+    match /progressEntries/{entryId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || isCoachOf(resource.data.athleteId) || isAdmin());
+      allow create, update, delete: if signedIn() && request.resource.data.athleteId == request.auth.uid;
+    }
+
+    match /progressPhotos/{photoId} {
+      // Strictly private: athlete + their coach only. Not even admin.
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || isCoachOf(resource.data.athleteId));
+      allow create, delete: if signedIn() && request.resource.data.athleteId == request.auth.uid;
+    }
+
+    match /healthGoals/{goalId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid || isAdmin());
+      allow create, update, delete: if signedIn() && request.resource.data.coachId == request.auth.uid;
+    }
+
+    match /healthGoalLogs/{logId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || isCoachOf(resource.data.athleteId) || isAdmin());
+      allow create, update: if signedIn() && request.resource.data.athleteId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------- bookings
+    match /bookings/{bookingId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid || isAdmin());
+      allow create: if signedIn() &&
+        (request.resource.data.athleteId == request.auth.uid || request.resource.data.coachId == request.auth.uid);
+      allow update: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid);
+    }
+
+    // -------------------------------------------------------------- messaging
+    match /conversations/{conversationId} {
+      allow read, update: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid);
+      allow create: if signedIn();
+
+      match /messages/{messageId} {
+        allow read: if signedIn() &&
+          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.athleteId == request.auth.uid ||
+           get(/databases/$(database)/documents/conversations/$(conversationId)).data.coachId == request.auth.uid);
+        allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    // -------------------------------------------------------------- billing (server-written)
+    match /subscriptions/{subId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid || isAdmin());
+      allow update: if isAdmin(); // pause/cancel via admin; Stripe webhook uses Admin SDK
+      allow create, delete: if false; // created by Cloud Functions only
+    }
+
+    match /payments/{paymentId} {
+      allow read: if signedIn() &&
+        (resource.data.athleteId == request.auth.uid || resource.data.coachId == request.auth.uid || isAdmin());
+      allow write: if false; // Cloud Functions only
+    }
+
+    match /payouts/{payoutId} {
+      allow read: if signedIn() && (resource.data.coachId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------- notifications & faq
+    match /notifications/{notificationId} {
+      allow read, update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn();
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /faq/{faqId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
