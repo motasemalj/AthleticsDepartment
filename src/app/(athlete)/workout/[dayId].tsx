@@ -30,7 +30,7 @@ function VideoSheet({ url, title, onClose }: { url: string; title: string; onClo
     <Sheet visible onClose={onClose} title={title}>
       <VideoView player={player} style={styles.video} contentFit="cover" nativeControls />
       <AppText variant="captionRegular" tone="tertiary" style={{ marginTop: spacing.sm }}>
-        Demo video from your coach's library
+        Demo video from your coach’s library
       </AppText>
     </Sheet>
   );
@@ -59,7 +59,7 @@ export default function WorkoutPlayer() {
   const plan = plans.find((p) => p.days.some((d) => d.id === dayId));
   const day = plan?.days.find((d) => d.id === dayId);
 
-  const [startedAt] = useState(Date.now());
+  const [startedAt] = useState(() => Date.now());
   const [elapsed, setElapsed] = useState(0);
   const [restLeft, setRestLeft] = useState<number | null>(null);
   const restTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -350,7 +350,7 @@ export default function WorkoutPlayer() {
           <View style={styles.offlineNote}>
             <Ionicons name="cloud-offline-outline" size={15} color={colors.warning} />
             <AppText variant="captionRegular" tone="warning">
-              You're offline. This workout saves to your device and syncs automatically.
+              You’re offline. This workout saves to your device and syncs automatically.
             </AppText>
           </View>
         ) : null}

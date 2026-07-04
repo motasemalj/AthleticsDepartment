@@ -1,5 +1,13 @@
+import { useState } from 'react';
+
 import { useData } from '@/services/data/store';
 import { useSession } from '@/services/session';
+
+/** Timestamp snapshot taken when the screen mounts (React-Compiler-safe). */
+export function useNow(): number {
+  const [now] = useState(() => Date.now());
+  return now;
+}
 
 /** Current signed-in user with role-specific profiles resolved. */
 export function useCurrentUser() {

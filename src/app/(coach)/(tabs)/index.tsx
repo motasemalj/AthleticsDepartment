@@ -27,10 +27,8 @@ export default function CoachDashboard() {
   const checkins = useData((s) => s.checkins);
   const bookings = useData((s) => s.bookings);
   const payments = useData((s) => s.payments);
-  const subscriptions = useData((s) => s.subscriptions);
 
   const clients = athleteProfiles.filter((p) => p.coachId === userId);
-  const activeSubs = subscriptions.filter((s) => s.coachId === userId && s.status === 'active').length;
   const pending = checkins
     .filter((c) => c.coachId === userId && c.status === 'pending')
     .sort((a, b) => a.createdAt - b.createdAt);

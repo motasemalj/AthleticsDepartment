@@ -14,7 +14,7 @@ import { AppText } from '@/components/ui/Text';
 import { toast } from '@/components/ui/Toast';
 import { useData } from '@/services/data/store';
 import { useSession } from '@/services/session';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, spacing } from '@/theme/tokens';
 
 const SPECIALTIES = [
   'Strength', 'Hypertrophy', 'Fat Loss', 'Powerlifting', 'CrossFit',

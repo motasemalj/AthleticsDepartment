@@ -17,7 +17,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { AppText } from '@/components/ui/Text';
 import { toast } from '@/components/ui/Toast';
 import { useData } from '@/services/data/store';
-import { useCurrentUser } from '@/services/hooks';
+import { useCurrentUser, useNow } from '@/services/hooks';
 import { colors, radius, spacing } from '@/theme/tokens';
 import type { Booking, SessionType } from '@/types';
 
@@ -35,6 +35,7 @@ function dayLabel(ts: number) {
 
 export default function ScheduleTab() {
   const { userId } = useCurrentUser();
+  const now = useNow();
   const bookings = useData((s) => s.bookings);
   const users = useData((s) => s.users);
   const updateBookingStatus = useData((s) => s.updateBookingStatus);
@@ -48,8 +49,8 @@ export default function ScheduleTab() {
     [bookings, userId]
   );
   const requests = mine.filter((b) => b.status === 'requested');
-  const upcoming = mine.filter((b) => b.status === 'confirmed' && b.startsAt > Date.now());
-  const past = mine.filter((b) => b.status === 'completed' || (b.startsAt <= Date.now() && b.status === 'confirmed')).reverse();
+  const upcoming = mine.filter((b) => b.status === 'confirmed' && b.startsAt > now);
+  const past = mine.filter((b) => b.status === 'completed' || (b.startsAt <= now && b.status === 'confirmed')).reverse();
 
   const athleteFor = (b: Booking) => users.find((u) => u.id === b.athleteId);
 

@@ -3,10 +3,9 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SortableList } from '@/components/SortableList';
-import { Badge, Chip } from '@/components/ui/Badge';
+import { Chip } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';

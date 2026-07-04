@@ -47,7 +47,6 @@ export default function AdminCoachDetail() {
   const clients = athleteProfiles.filter((p) => p.coachId === id).length;
   const paid = payments.filter((p) => p.coachId === id && p.status === 'paid');
   const gross = paid.reduce((a, p) => a + p.amountAed, 0);
-  const commissionEarned = paid.reduce((a, p) => a + p.commissionAed, 0);
 
   return (
     <Screen padded={false}>

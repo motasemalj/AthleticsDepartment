@@ -39,12 +39,6 @@ export default function InviteScreen() {
   const [error, setError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
 
-  // Deep-link entry: athleticsdept://join/TOKEN pre-verifies the invite.
-  React.useEffect(() => {
-    if (params.token) checkToken(String(params.token), 'invite-link');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.token]);
-
   const checkToken = (value: string, via: 'invite-link' | 'qr') => {
     const invite = invites.find(
       (i) => i.token.toUpperCase() === value.trim().toUpperCase() && !i.revoked && !i.usedBy
@@ -61,6 +55,14 @@ export default function InviteScreen() {
     setJoinedVia(via);
     setValidCoach(coach?.name ?? 'your coach');
   };
+
+  // Deep-link entry: athleticsdept://join/TOKEN pre-verifies the invite.
+  // Syncing the URL param into local state is intentional here.
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (params.token) checkToken(String(params.token), 'invite-link');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.token]);
 
   const handleScan = ({ data }: { data: string }) => {
     if (scanned) return;

@@ -15,7 +15,7 @@ import { ProgressBar, ProgressRing } from '@/components/ui/Progress';
 import { Screen } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/Text';
 import { useData } from '@/services/data/store';
-import { useCurrentUser, useUnreadCounts } from '@/services/hooks';
+import { useCurrentUser, useNow, useUnreadCounts } from '@/services/hooks';
 import { useOfflineSync } from '@/services/useOfflineSync';
 import { colors, radius, spacing } from '@/theme/tokens';
 import { computeStreak, dateKey, formatDuration } from '@/utils';
@@ -37,9 +37,10 @@ function HeaderBell({ count, onPress, icon }: { count: number; onPress: () => vo
 
 export default function AthleteHome() {
   const router = useRouter();
-  const { userId, user, athleteProfile, coach } = useCurrentUser();
+  const { userId, user, coach } = useCurrentUser();
   const { unreadMessages, unreadNotifications } = useUnreadCounts(userId);
   const { isOnline } = useOfflineSync();
+  const now = useNow();
 
   const plans = useData((s) => s.plans);
   const workoutLogs = useData((s) => s.workoutLogs);
@@ -64,9 +65,13 @@ export default function AthleteHome() {
   const pendingSync = workoutLogs.filter((l) => l.athleteId === userId && !l.synced).length;
 
   const todayCheckin = checkins.find((c) => c.athleteId === userId && c.date === todayKey);
-  const nextBooking = bookings
-    .filter((b) => b.athleteId === userId && b.startsAt > Date.now() && b.status !== 'cancelled')
-    .sort((a, b) => a.startsAt - b.startsAt)[0];
+  const nextBooking = useMemo(
+    () =>
+      bookings
+        .filter((b) => b.athleteId === userId && b.startsAt > now && b.status !== 'cancelled')
+        .sort((a, b) => a.startsAt - b.startsAt)[0],
+    [bookings, userId, now]
+  );
 
   const nutritionPlan = nutritionPlans.find((p) => p.athleteId === userId);
   const todayCals = mealLogs
@@ -112,7 +117,7 @@ export default function AthleteHome() {
             <Card style={styles.offlineBanner}>
               <Ionicons name="cloud-offline-outline" size={16} color={colors.warning} />
               <AppText variant="caption" tone="warning">
-                You're offline — workouts still log and will sync automatically
+                You’re offline — workouts still log and will sync automatically
               </AppText>
             </Card>
           </Animated.View>

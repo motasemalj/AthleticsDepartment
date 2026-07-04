@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { format, subMonths } from 'date-fns';
+import { subMonths } from 'date-fns';
 
 import { Donut } from '@/components/charts/Donut';
 import { Avatar } from '@/components/ui/Avatar';

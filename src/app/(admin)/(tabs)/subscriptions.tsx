@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { format } from 'date-fns';
 
@@ -15,7 +14,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { AppText } from '@/components/ui/Text';
 import { toast } from '@/components/ui/Toast';
 import { useData } from '@/services/data/store';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 import type { Subscription } from '@/types';
 import { formatAed } from '@/utils';
 

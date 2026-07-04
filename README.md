@@ -1,56 +1,116 @@
-# Welcome to your Expo app 👋
+# Athletics Department
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A multi-coach fitness marketplace for iOS and Android. Coaches manage their athletes, deliver
+personalised training and nutrition plans, run video check-ins over Google Meet, and earn through
+AED subscriptions with automatic commission splits — while athletes train, track progress, and stay
+connected to their coach whether they have internet or not.
 
-## Get started
+Built with **Expo (React Native) + TypeScript + Expo Router**, backed by **Firebase**
+(Firestore, Auth, Storage, FCM, Cloud Functions) and **Stripe**.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Quick start
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Scan the QR with Expo Go (or press `i` / `a` for simulators). The app ships with a fully seeded
+**demo mode** — no credentials required:
 
-### Other setup steps
+| Role    | How to enter                                                  |
+| ------- | ------------------------------------------------------------- |
+| Athlete | Welcome screen → "Explore the demo" → Athlete (Maya Khalil)   |
+| Coach   | Welcome screen → "Explore the demo" → Coach (Omar Al-Rashid)  |
+| Admin   | Welcome screen → "Explore the demo" → Admin (platform owner)  |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+You can also walk the real onboarding flows: redeem the demo invite code `OMAR-TRAIN-24` as a new
+athlete, or submit a coach application and approve it from the admin account.
 
-## Learn more
+## Features
 
-To learn more about developing your project with Expo, look at the following resources:
+**Athlete** — invite-only login (link or QR), fitness disclaimer & 18+ gate, home dashboard,
+daily check-ins (journal, mood, energy, photo), day-by-day training plans with demo videos,
+**offline workout logging with automatic sync**, workout calendar & streaks, nutrition plans with
+macro targets and meal logging, progress tracking (weight, body fat, measurements, photos),
+before/after comparison, video check-in bookings, in-app messaging, subscription & billing.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+**Coach** — registration with certification upload and admin approval, dashboard (clients, revenue,
+pending check-ins), check-in review queue (oldest-first), searchable client roster with 4-tab
+profiles, workout plan builder with exercise library and **drag-to-reorder**, nutrition plan
+builder, video library with exercise assignment, health-goal tracking with compliance view,
+session scheduling with Google Meet links, 3/6/12-month pricing with student discounts,
+earnings dashboard (gross / commission / net / payouts), athlete invitations via link and QR.
 
-## Join the community
+**Admin / Platform** — coach approval with certification review and commission setting,
+subscription oversight (pause / cancel / refund), split-revenue dashboard (owner coaching income vs
+platform commission, per-coach drill-down), Stripe payments in AED with automatic commission
+splits, real-time sync, push notifications, in-app FAQ with email & WhatsApp support, privacy
+compliance and full account deletion.
 
-Join our community of developers creating universal apps.
+## Project structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+src/app/              Expo Router routes
+  (auth)/             Welcome, sign-in, invite redemption, coach application, disclaimer
+  (athlete)/          Athlete tabs + workout player, check-ins, progress, bookings, billing
+  (coach)/            Coach tabs + plan builders, video library, earnings, pricing, invites
+  (admin)/            Admin tabs + coach approvals, subscriptions, revenue split
+  chat/[id].tsx       Shared chat thread (athlete ↔ coach)
+src/components/       Design system (Text, Button, Card, Sheet, charts, calendar, sortable list)
+src/services/         Data store (Zustand), chat (Firebase-aware), offline sync, push, session
+src/theme/            Design tokens: color, typography, spacing, radius, motion
+src/types/            Domain models
+functions/            Cloud Functions: Stripe checkout/webhooks/refunds, invites, FCM fan-out
+firestore.rules       Locked-down security rules
+storage.rules         Storage rules (progress photos private to athlete + coach)
+```
+
+## Demo mode vs production
+
+The app runs against a seeded local data layer (persisted with AsyncStorage) so every feature works
+end-to-end out of the box, including the offline workout-logging lifecycle. Messaging is already
+dual-path: when Firebase credentials are present, chat reads/writes Cloud Firestore in real time.
+
+### Switching to production (~15 minutes)
+
+1. **Firebase** — create a project, enable Auth (email/password), Firestore, Storage and FCM. Add a
+   web app and put its config in `.env` (see `.env.example`):
+
+   ```
+   EXPO_PUBLIC_FIREBASE_API_KEY=...
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=...
+   ...
+   ```
+
+2. **Rules & indexes** — `firebase deploy --only firestore,storage`.
+
+3. **Cloud Functions** — set secrets and deploy:
+
+   ```bash
+   firebase functions:secrets:set STRIPE_SECRET_KEY
+   firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+   firebase deploy --only functions
+   ```
+
+4. **Stripe** — create a UAE (AED) account, point a webhook at the deployed `stripeWebhook`
+   function for `invoice.paid`, `invoice.payment_failed` and `customer.subscription.deleted`.
+   Checkout sessions, student pricing and commission splits are handled by
+   `functions/src/index.ts`.
+
+5. **Push** — FCM fan-out is live via the `sendPush` function; device registration is in
+   `src/services/push.ts` (called after sign-in in production builds).
+
+## Builds
+
+```bash
+npx expo run:ios          # local dev build
+npx expo run:android
+eas build --platform all  # store builds via EAS
+```
+
+## Verification
+
+- `npx tsc --noEmit` — typecheck (app + functions)
+- `npm run lint` — ESLint (React Compiler rules enabled)
+- `npx expo export --platform ios|android` — bundle check

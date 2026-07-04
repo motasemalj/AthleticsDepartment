@@ -24,7 +24,7 @@ import type {
   User,
   WorkoutLog,
 } from '@/types';
-import { daysAgoKey, dateKey } from '@/utils';
+import { daysAgoKey } from '@/utils';
 
 const now = Date.now();
 const DAY = 86_400_000;

@@ -8,15 +8,14 @@ import { format } from 'date-fns';
 
 import { LineChart } from '@/components/charts/LineChart';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, Chip } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card, Divider, SectionHeader } from '@/components/ui/Card';
+import { Card, SectionHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/Progress';
 import { Screen, ScreenHeader } from '@/components/ui/Screen';
 import { Segmented } from '@/components/ui/Segmented';
 import { AppText } from '@/components/ui/Text';
-import { Chip } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
 import { toast } from '@/components/ui/Toast';
@@ -45,8 +44,6 @@ export default function ClientProfile() {
   const healthGoalLogs = useData((s) => s.healthGoalLogs);
   const subscriptions = useData((s) => s.subscriptions);
   const conversations = useData((s) => s.conversations);
-  const exercises = useData((s) => s.exercises);
-
   const addHealthGoal = useData((s) => s.addHealthGoal);
   const removeHealthGoal = useData((s) => s.removeHealthGoal);
 

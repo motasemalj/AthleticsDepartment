@@ -12,7 +12,7 @@ import { AppText } from '@/components/ui/Text';
 import { toast } from '@/components/ui/Toast';
 import { useData } from '@/services/data/store';
 import { useCurrentUser } from '@/services/hooks';
-import { colors, palette, radius, spacing } from '@/theme/tokens';
+import { colors, spacing } from '@/theme/tokens';
 import type { MealTemplate, NutritionPlan } from '@/types';
 import { uid } from '@/utils';
 

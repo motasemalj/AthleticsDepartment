@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen, ScreenHeader } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/Text';
 import { useData } from '@/services/data/store';
-import { useCurrentUser } from '@/services/hooks';
+import { useCurrentUser, useNow } from '@/services/hooks';
 import { colors, radius, spacing } from '@/theme/tokens';
 import type { Booking, SessionType } from '@/types';
 
@@ -36,8 +36,15 @@ const STATUS_TONES = {
   cancelled: 'danger',
 } as const;
 
-function BookingCard({ booking, onCancel }: { booking: Booking; onCancel?: (id: string) => void }) {
-  const isPast = booking.startsAt < Date.now();
+function BookingCard({
+  booking,
+  isPast,
+  onCancel,
+}: {
+  booking: Booking;
+  isPast: boolean;
+  onCancel?: (id: string) => void;
+}) {
   return (
     <Card style={{ marginBottom: spacing.xs }}>
       <View style={styles.row}>
@@ -89,12 +96,14 @@ export default function BookingsScreen() {
   const bookings = useData((s) => s.bookings);
   const updateBookingStatus = useData((s) => s.updateBookingStatus);
 
-  const mine = useMemo(
-    () => bookings.filter((b) => b.athleteId === userId).sort((a, b) => a.startsAt - b.startsAt),
-    [bookings, userId]
-  );
-  const upcoming = mine.filter((b) => b.startsAt > Date.now() && b.status !== 'cancelled');
-  const past = mine.filter((b) => b.startsAt <= Date.now() || b.status === 'cancelled').reverse();
+  const now = useNow();
+  const { upcoming, past } = useMemo(() => {
+    const mine = bookings.filter((b) => b.athleteId === userId).sort((a, b) => a.startsAt - b.startsAt);
+    return {
+      upcoming: mine.filter((b) => b.startsAt > now && b.status !== 'cancelled'),
+      past: mine.filter((b) => b.startsAt <= now || b.status === 'cancelled').reverse(),
+    };
+  }, [bookings, userId, now]);
 
   return (
     <Screen padded={false}>
@@ -118,7 +127,7 @@ export default function BookingsScreen() {
               <Animated.View entering={FadeInDown.duration(300)}>
                 <SectionHeader title="Upcoming" style={{ marginTop: 0 }} />
                 {upcoming.map((b) => (
-                  <BookingCard key={b.id} booking={b} onCancel={(id) => updateBookingStatus(id, 'cancelled')} />
+                  <BookingCard key={b.id} booking={b} isPast={false} onCancel={(id) => updateBookingStatus(id, 'cancelled')} />
                 ))}
               </Animated.View>
             ) : (
@@ -132,7 +141,7 @@ export default function BookingsScreen() {
               <>
                 <SectionHeader title="History" />
                 {past.map((b) => (
-                  <BookingCard key={b.id} booking={b} />
+                  <BookingCard key={b.id} booking={b} isPast />
                 ))}
               </>
             ) : null}

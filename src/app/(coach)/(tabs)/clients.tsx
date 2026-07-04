@@ -13,8 +13,8 @@ import { Screen, ScreenHeader } from '@/components/ui/Screen';
 import { AppText } from '@/components/ui/Text';
 import { useData } from '@/services/data/store';
 import { useCurrentUser } from '@/services/hooks';
-import { colors, spacing } from '@/theme/tokens';
-import { computeStreak, dateKey } from '@/utils';
+import { spacing } from '@/theme/tokens';
+import { computeStreak } from '@/utils';
 
 export default function ClientsRoster() {
   const router = useRouter();
